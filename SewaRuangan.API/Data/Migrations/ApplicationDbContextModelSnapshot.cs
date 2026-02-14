@@ -268,7 +268,7 @@ namespace SewaRuangan.API.Data.Migrations
                     b.Property<int>("Role")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                        .HasDefaultValue(2);
 
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
