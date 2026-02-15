@@ -43,7 +43,7 @@ namespace SewaRuangan.API.Models.Enums
         // Cek apakah bisa melihat semua peminjaman
         public static bool CanViewAllReservations(this UserRole role)
         {
-            return role == UserRole.Admin || role == UserRole.Staff;
+            return role == UserRole.Admin || role == UserRole.Staff || role == UserRole.Dosen;
         }
 
         // Cek apakah bisa mengelola user

@@ -35,7 +35,6 @@ namespace SewaRuangan.API.Data.Migrations
                         .HasColumnName("admin_id");
 
                     b.Property<string>("CatatanAdmin")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("catatan_admin");
 

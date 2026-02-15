@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using SewaRuangan.API.Data;
+using SewaRuangan.API.Data.Seed;
 using SewaRuangan.API.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);

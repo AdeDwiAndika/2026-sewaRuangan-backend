@@ -57,7 +57,7 @@ namespace SewaRuangan.API.Models.Entities
         public DateTime? DisetujuiPada { get; set; }
 
         [Column("catatan_admin")]
-        public string CatatanAdmin { get; set; }
+        public string? CatatanAdmin { get; set; }
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
