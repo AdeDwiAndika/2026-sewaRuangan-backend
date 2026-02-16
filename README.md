@@ -8,7 +8,7 @@ Sistem backend untuk aplikasi peminjaman dan manajemen ruangan berbasis REST API
 - Entity Framework Core
 - PostgreSQL
 - JWT Authentication
-- C#
+- Swagger UI
 
 ## Fitur Utama
 
@@ -16,8 +16,8 @@ Sistem backend untuk aplikasi peminjaman dan manajemen ruangan berbasis REST API
 - CRUD peminjaman ruangan
 - Approval/cancel/reject peminjaman
 - Manajemen user & role (Admin, Staff, Dosen, Mahasiswa)
-- Manajemen ruangan
 - Validasi & error handling
+- Manajemen ruangan
 
 ## Panduan Instalasi
 
@@ -50,4 +50,4 @@ Sistem backend untuk aplikasi peminjaman dan manajemen ruangan berbasis REST API
 
 - Pastikan PostgreSQL sudah berjalan.
 - Default port: 5238 (ubah di `launchSettings.json` jika perlu).
-- Gunakan tool seperti Postman untuk testing endpoint.
+- Gunakan tool seperti Postman / Swagger untuk testing endpoint.
