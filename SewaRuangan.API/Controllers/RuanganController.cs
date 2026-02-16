@@ -51,16 +51,6 @@ namespace SewaRuangan.API.Controllers
             return ruangan;
         }
 
-        // GET: api/Ruangan/gedung/Gedung Rektorat
-        [HttpGet("gedung/{gedung}")]
-        public async Task<ActionResult<IEnumerable<Ruangan>>> GetRuanganByGedung(string gedung)
-        {
-            return await _context.Ruangans
-                .Where(r => r.Gedung == gedung)
-                .OrderBy(r => r.Lantai)
-                .ToListAsync();
-        }
-
         // POST: api/Ruangan (khusus admin)
         [HttpPost]
         [Authorize(Roles = "Admin,Staff")]

@@ -151,6 +151,11 @@ namespace SewaRuangan.API.Controllers
                     return BadRequest(new { message = "Ruangan sudah dipinjam di jam tersebut" });
                 }
 
+                if (dto.JumlahPeserta > ruangan.Kapasitas)
+                {
+                    return BadRequest(new { message = $"Jumlah peserta melebihi kapasitas ruangan ({ruangan.Kapasitas})" });
+                }
+
                 // Buat entity Reservation dari DTO
                 var reservation = new Reservation
                 {
@@ -218,11 +223,8 @@ namespace SewaRuangan.API.Controllers
 
         // PUT: api/Reservation/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateReservation(int id, Reservation reservation)
+        public async Task<IActionResult> UpdateReservation(int id, [FromBody] UpdateReservationDto dto)
         {
-            if (id != reservation.Id)
-                return BadRequest();
-
             var existing = await _context.Reservations.FindAsync(id);
             if (existing == null)
                 return NotFound();
@@ -232,19 +234,29 @@ namespace SewaRuangan.API.Controllers
             if (existing.UserId != userId)
                 return Forbid();
 
+            if (dto.WaktuMulai.HasValue && dto.WaktuSelesai.HasValue)
+            {
+                if (dto.WaktuMulai.Value >= dto.WaktuSelesai.Value)
+                {
+                    return BadRequest(new { message = "Waktu mulai harus sebelum waktu selesai" });
+                }
+            }
+
             // Hanya bisa update jika masih menunggu
             if (existing.Status != "menunggu")
                 return BadRequest(new { message = "Hanya peminjaman dengan status menunggu yang bisa diubah" });
 
             // Update field yang boleh diubah
-            existing.Keperluan = reservation.Keperluan;
-            existing.JumlahPeserta = reservation.JumlahPeserta;
+            if (dto.Keperluan != null)
+                existing.Keperluan = dto.Keperluan;
+            if (dto.JumlahPeserta.HasValue)
+                existing.JumlahPeserta = dto.JumlahPeserta.Value;
             existing.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
             return Ok(new { message = "Peminjaman berhasil diubah" });
         }
-
+        
         // DELETE: api/Reservation/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteReservation(int id)
