@@ -89,7 +89,6 @@ namespace SewaRuangan.API.Controllers
             return Ok(dtos);
         }
 
-        // 4. METHOD DENGAN PARAMETER ID - PALING BAWAH
         // GET: api/Reservation/5
         [HttpGet("{id}")]
         public async Task<ActionResult<ReservationDto>> GetReservation(int id)
@@ -119,25 +118,21 @@ namespace SewaRuangan.API.Controllers
         {
             try
             {
-                // Validasi manual
+                // Validasi Waktu
                 if (dto.WaktuMulai >= dto.WaktuSelesai)
                 {
                     return BadRequest(new { message = "Waktu mulai harus sebelum waktu selesai" });
                 }
 
-                // Cek apakah ruangan ada
+                // Validasi Ruangan
                 var ruangan = await _context.Ruangans.FindAsync(dto.RuanganId);
                 if (ruangan == null)
-                {
                     return BadRequest(new { message = "Ruangan tidak ditemukan" });
-                }
-
                 if (ruangan.Status != "tersedia")
-                {
                     return BadRequest(new { message = "Ruangan tidak tersedia untuk dipinjam" });
-                }
+                
 
-                // Cek ketersediaan ruangan
+                // Validasi Bentrok Jadwal
                 var bentrok = await _context.Reservations.AnyAsync(r =>
                     r.RuanganId == dto.RuanganId &&
                     r.TanggalPeminjaman.Date == dto.TanggalPeminjaman.Date &&
@@ -147,14 +142,11 @@ namespace SewaRuangan.API.Controllers
                     (dto.WaktuMulai <= r.WaktuMulai && dto.WaktuSelesai >= r.WaktuSelesai)));
 
                 if (bentrok)
-                {
                     return BadRequest(new { message = "Ruangan sudah dipinjam di jam tersebut" });
-                }
-
+                
+                // Validasi Kapasitas
                 if (dto.JumlahPeserta > ruangan.Kapasitas)
-                {
                     return BadRequest(new { message = $"Jumlah peserta melebihi kapasitas ruangan ({ruangan.Kapasitas})" });
-                }
 
                 // Buat entity Reservation dari DTO
                 var reservation = new Reservation
@@ -234,13 +226,35 @@ namespace SewaRuangan.API.Controllers
             if (existing.UserId != userId)
                 return Forbid();
 
-            if (dto.WaktuMulai.HasValue && dto.WaktuSelesai.HasValue)
-            {
-                if (dto.WaktuMulai.Value >= dto.WaktuSelesai.Value)
-                {
-                    return BadRequest(new { message = "Waktu mulai harus sebelum waktu selesai" });
-                }
-            }
+            // Ambil ruangan terkait
+            var ruangan = await _context.Ruangans.FindAsync(existing.RuanganId);
+            if (ruangan == null)
+                return BadRequest(new { message = "Ruangan tidak ditemukan" });
+
+            // Validasi waktu
+            var waktuMulai = dto.WaktuMulai ?? existing.WaktuMulai;
+            var waktuSelesai = dto.WaktuSelesai ?? existing.WaktuSelesai;
+            if (waktuMulai >= waktuSelesai)
+                return BadRequest(new { message = "Waktu mulai harus sebelum waktu selesai" });
+
+            // Validasi bentrok jadwal
+            var tanggal = dto.TanggalPeminjaman ?? existing.TanggalPeminjaman;
+            var bentrok = await _context.Reservations.AnyAsync(r =>
+                r.Id != id &&
+                r.RuanganId == existing.RuanganId &&
+                r.TanggalPeminjaman.Date == tanggal.Date &&
+                r.Status != "ditolak" && r.Status != "dibatalkan" &&
+                ((waktuMulai >= r.WaktuMulai && waktuMulai < r.WaktuSelesai) ||
+                (waktuSelesai > r.WaktuMulai && waktuSelesai <= r.WaktuSelesai) ||
+                (waktuMulai <= r.WaktuMulai && waktuSelesai >= r.WaktuSelesai))
+            );
+            if (bentrok)
+                return BadRequest(new { message = "Ruangan sudah dipinjam di jam tersebut" });
+
+            // Validasi kapasitas
+            var jumlahPeserta = dto.JumlahPeserta ?? existing.JumlahPeserta;
+            if (jumlahPeserta > ruangan.Kapasitas)
+                return BadRequest(new { message = $"Jumlah peserta melebihi kapasitas ruangan ({ruangan.Kapasitas})" });
 
             // Hanya bisa update jika masih menunggu
             if (existing.Status != "menunggu")
@@ -251,6 +265,13 @@ namespace SewaRuangan.API.Controllers
                 existing.Keperluan = dto.Keperluan;
             if (dto.JumlahPeserta.HasValue)
                 existing.JumlahPeserta = dto.JumlahPeserta.Value;
+            existing.UpdatedAt = DateTime.UtcNow;
+            if (dto.TanggalPeminjaman.HasValue)
+                existing.TanggalPeminjaman = dto.TanggalPeminjaman.Value;
+            if (dto.WaktuMulai.HasValue)
+                existing.WaktuMulai = dto.WaktuMulai.Value;
+            if (dto.WaktuSelesai.HasValue)
+                existing.WaktuSelesai = dto.WaktuSelesai.Value;
             existing.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
